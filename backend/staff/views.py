@@ -24,21 +24,16 @@ class EmployeeList(APIView):
         return Response(serializer.data)
 
     def post(self, request):
-        data = request.data.copy()
-        data['user'] = request.user.id
-        serializer = EmployeeSerializer(data=data)
+        serializer = EmployeeSerializer(data=request.data, context={'request': request})
         if serializer.is_valid():
-            serializer.save()
+            serializer.save(user=request.user)
             return Response(serializer.data, status=201)
         return Response(serializer.errors, status=400)
 
 
+
 class JobRoleList(APIView):
-    def get_permissions(self):
-        if self.request.method in ['GET', 'POST']:
-            return [IsAuthenticated(), IsStaff()]
-        else:
-            return [IsAuthenticated(), IsAdminUser()]
+    permission_classes = [IsAuthenticated, IsAdminUser]
 
     def get(self, request):
         job_role = JobRole.objects.all()
@@ -99,7 +94,7 @@ class IssueList(APIView):
     permission_classes = [IsAuthenticated, IsStaff]
 
     def get(self, request):
-        issue = Issue.objects.filter(record_id__employee__user=request.user)
+        issue = JobSchedule.objects.filter(record_id__employee__user=request.user)
         serializer = IssueSerializer(issue, many=True)
         return Response(serializer.data)
 

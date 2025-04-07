@@ -22,20 +22,19 @@ class Employee(models.Model):
             models.UniqueConstraint(fields=['user', 'job_role_id'], name='unique_employee'),
         ]
 
+class Issue(models.Model):
+    issue_id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    problem = models.TextField()
+
 
 class JobSchedule(models.Model):
     record_id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     train_id = models.ForeignKey(Train, on_delete=models.CASCADE)
     date = models.DateField()
     employee = models.ForeignKey(Employee, on_delete=models.CASCADE)
-
+    issue = models.ForeignKey(Issue, on_delete=models.CASCADE)
     class Meta:
         constraints = [
             models.UniqueConstraint(fields=['train_id', 'date', 'employee'], name='unique_record'),
         ]
 
-
-class Issue(models.Model):
-    issue_id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    record_id = models.ForeignKey(JobSchedule, on_delete=models.CASCADE)
-    issue_reported = models.TextField()
