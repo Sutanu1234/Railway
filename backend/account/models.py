@@ -80,3 +80,8 @@ class Passenger(AbstractBaseUser, PermissionsMixin):
     @property
     def id(self):
         return self.passenger_id
+
+
+# class staff_email(models.Model):
+    
+#     staff_email = models.EmailField(max_length=255, unique=True)

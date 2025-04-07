@@ -4,6 +4,7 @@ from .views import (
     TrainUpdateView, TrainDetailView,
     CoachUpdateView, CoachDetailView,
     SeatUpdateView, SeatDetailView,
+    ReviewView,
 )
 
 urlpatterns = [
@@ -21,4 +22,7 @@ urlpatterns = [
     # Seat Endpoints
     path('seats/', SeatUpdateView.as_view(), name='seat-list-create'),
     path('seats/<str:pk>/', SeatDetailView.as_view(), name='seat-detail'),
+
+    # Review Endpoints
+    path('reviews/', ReviewView.as_view(), name='review-list-create'),
 ]
