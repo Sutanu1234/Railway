@@ -52,3 +52,23 @@ class Reservation(models.Model):
         constraints = [
             models.UniqueConstraint(fields=['reservation_id'], name='unique_reservation'),
         ]
+
+class Review(models.Model):
+    review_id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    passenger_id = models.ForeignKey(User, on_delete=models.CASCADE)
+    train_id = models.ForeignKey(Train, on_delete=models.CASCADE)
+    comments = models.TextField()
+    rating = models.PositiveSmallIntegerField()
+    def __str__(self):
+        return f"{self.passenger_id.name} - {self.train_id.train_name} ({self.rating}/5)"
+
+    class Meta:
+        constraints = [
+            models.CheckConstraint(check=models.Q(rating__gte=1, rating__lte=5), name='valid_rating_range'),
+            models.UniqueConstraint(fields=['passenger_id', 'train_id'], name='unique_review'),
+        ]
+
+
+
+# class email_staff(models.Model):
+#     unique_email = 

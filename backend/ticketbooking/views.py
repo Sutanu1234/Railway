@@ -25,6 +25,19 @@ class TicketbookingView(APIView):
         serializer = ReservationSerializer(reservations, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
 
+    def delete(self, request, pk):
+        try:
+            reservation = Reservation.objects.get(pk=pk)
+        except Reservation.DoesNotExist:
+            return Response({"error": "Reservation not found"}, status=404)
+
+        if reservation.booked_by != request.user:
+            return Response({"error": "You are not authorized to delete this reservation"}, status=403)
+
+        reservation.delete()
+        return Response({"message": "Reservation deleted successfully"}, status=204)
+
+
 class TrainUpdateView(APIView):
     def get_permissions(self):
         if self.request.method == 'POST':
@@ -225,3 +238,40 @@ class SeatDetailView(APIView):
             return Response({"error": "Seat not found"}, status=404)
         seat.delete()
         return Response({"message": "Seat deleted successfully"}, status=204)
+
+
+class ReviewView(APIView):
+    def get_permissions(self):
+        if self.request.method == 'POST':
+            return [IsAuthenticated()]
+        elif self.request.method in ['PUT', 'DELETE']:
+            return [IsAuthenticated(), ]
+        return [AllowAny()]
+
+    def get(self, request, *args, **kwargs):
+        # Return all reviews or one, depending on your design
+        reviews = Review.objects.all()
+        serializer = ReviewSerializer(reviews, many=True)
+        return Response(serializer.data)
+
+    def post(self, request, *args, **kwargs):
+        serializer = ReviewSerializer(data=request.data)
+        if serializer.is_valid():
+            serializer.save(passenger=request.user)
+            return Response(serializer.data, status=201)
+        return Response(serializer.errors, status=400)
+
+    def put(self, request, pk, *args, **kwargs):
+        review = get_object_or_404(Review, pk=pk)
+        self.check_object_permissions(request, review)
+        serializer = ReviewSerializer(review, data=request.data, partial=True)
+        if serializer.is_valid():
+            serializer.save(passenger=request.user)
+            return Response(serializer.data)
+        return Response(serializer.errors, status=400)
+
+    def delete(self, request, pk, *args, **kwargs):
+        review = get_object_or_404(Review, pk=pk)
+        self.check_object_permissions(request, review)
+        review.delete()
+        return Response(status=204)

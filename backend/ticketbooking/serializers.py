@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import Train, Coach, Seat, Ticket, Reservation, Passenger
+from .models import Train, Coach, Seat, Ticket, Reservation, Passenger,Review
 from django.contrib.auth import get_user_model
 
 User = get_user_model()
@@ -91,3 +91,15 @@ class ReservationSerializer(serializers.ModelSerializer):
             reservation.tickets.add(ticket)
 
         return reservation
+
+class ReviewSerializer(serializers.ModelSerializer):
+    passenger_id = serializers.PrimaryKeyRelatedField(read_only=True)
+    train_id = serializers.PrimaryKeyRelatedField(queryset=Train.objects.all())
+
+    class Meta:
+        model = Review
+        fields = '__all__'
+        read_only_fields = ['review_id', 'passenger_id']
+
+    def create(self, validated_data):
+        return Review.objects.create(**validated_data)
