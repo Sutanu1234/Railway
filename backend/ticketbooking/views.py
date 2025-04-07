@@ -9,42 +9,21 @@ from .permissions import IsStaff
 
 
 class TicketbookingView(APIView):
-    permission_classes = [IsAuthenticated]
-
     def post(self, request):
-        ticket_data = {
-            'passenger': request.user.id,
-            'schedule_id': request.data.get('schedule_id'),
-            'seat': request.data.get('seat'),
-            'date': request.data.get('date'),
-            'train': request.data.get('train'),
-            'coach': request.data.get('coach'),
-        }
+        data = request.data.copy()
+        data['booked_by'] = request.user.id  # Automatically assign the current user
 
-        ticket_serializer = TicketSerializer(data=ticket_data)
-        if ticket_serializer.is_valid():
-            ticket = ticket_serializer.save()
-        else:
-            return Response(ticket_serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        serializer = ReservationSerializer(data=data)
+        if serializer.is_valid():
+            reservation = serializer.save()
+            return Response(ReservationSerializer(reservation).data, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-        reservation_data = {
-            'passenger': request.user.id,
-            'ticket': ticket.ticket_id,
-            'reservation_date': request.data.get('reservation_date'),
-        }
-
-        reservation_serializer = ReservationSerializer(data=reservation_data)
-        if reservation_serializer.is_valid():
-            reservation_serializer.save()
-        else:
-            ticket.delete()
-            return Response(reservation_serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
-        return Response({
-            'message': 'Ticket booked successfully',
-            'ticket': TicketSerializer(ticket).data,
-        }, status=status.HTTP_201_CREATED)
-
+    def get(self, request):
+        user = request.user
+        reservations = Reservation.objects.filter(booked_by=user).order_by('-created_at')
+        serializer = ReservationSerializer(reservations, many=True)
+        return Response(serializer.data, status=status.HTTP_200_OK)
 
 class TrainUpdateView(APIView):
     def get_permissions(self):

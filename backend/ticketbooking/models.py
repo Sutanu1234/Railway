@@ -3,7 +3,7 @@ import uuid
 from django.contrib.auth import get_user_model
 
 User = get_user_model()
-# Create your models here.
+
 class Train(models.Model):
     train_id = models.CharField(max_length=50, primary_key=True)
     train_name = models.CharField(max_length=50)
@@ -20,10 +20,17 @@ class Seat(models.Model):
     seat_type = models.CharField(max_length=50)
     seat_number = models.CharField(max_length=10)
 
+class Passenger(models.Model):
+    name = models.CharField(max_length=100)
+    age = models.PositiveIntegerField()
+    gender = models.CharField(max_length=10)
+    # Optionally: add ID proof or phone number
+
 class Ticket(models.Model):
     ticket_id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    passenger = models.ForeignKey(User, on_delete=models.CASCADE)
-    schedule_id = models.CharField(max_length=50)  # consider making it ForeignKey later
+    booked_by = models.ForeignKey(User, on_delete=models.CASCADE)  # The user who books
+    passenger = models.ForeignKey(Passenger, on_delete=models.CASCADE)  # Actual traveler
+    schedule_id = models.CharField(max_length=50)  # Consider making it a FK
     seat = models.ForeignKey(Seat, on_delete=models.CASCADE)
     date = models.DateField()
     train = models.ForeignKey(Train, on_delete=models.CASCADE)
@@ -36,12 +43,12 @@ class Ticket(models.Model):
 
 class Reservation(models.Model):
     reservation_id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    passenger = models.ForeignKey(User, on_delete=models.CASCADE)
-    ticket = models.ForeignKey(Ticket, on_delete=models.CASCADE)
+    booked_by = models.ForeignKey(User, on_delete=models.CASCADE)
     reservation_date = models.DateField()
     created_at = models.DateField(auto_now=True)
+    tickets = models.ManyToManyField(Ticket)
 
     class Meta:
         constraints = [
-            models.UniqueConstraint(fields=['ticket'], name='unique_ticket'),
+            models.UniqueConstraint(fields=['reservation_id'], name='unique_reservation'),
         ]
