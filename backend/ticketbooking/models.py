@@ -35,6 +35,8 @@ class Ticket(models.Model):
     date = models.DateField()
     train = models.ForeignKey(Train, on_delete=models.CASCADE)
     coach = models.ForeignKey(Coach, on_delete=models.CASCADE)
+    starting_point = models.CharField(max_length=50)
+    destination = models.CharField(max_length=50)
 
     class Meta:
         constraints = [
