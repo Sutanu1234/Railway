@@ -20,6 +20,40 @@ async def get_trains():
     trains = list(trainCollection.find())
     return listTrainSerial(trains)
 
+
+@routerTrains.get("/{trainId}/info")
+async def getTrainInfo(trainId: str):
+    train = trainCollection.find_one({"trainId":trainId})
+    if not train:
+        raise HTTPException(status_code=404, detail="Train not found")
+
+
+    trainName = train.get("trainName")
+    coachIds = train.get("coachIds", [])
+
+
+    coachData = []
+
+    for cid in coachIds:
+        coach = collectionName.find_one({"_id":ObjectId(cid)})
+        if coach:
+            coachData.append(
+                {
+                    "coachId": str(coach["_id"]),
+                    "coachNumber": coach.get("number"),
+                    "totalSeats": coach.get("totalSeats"),
+                    "bookedSeats":coach.get("bookedSeats",[])
+                }
+            )
+
+    return {
+        "trainId": trainId,
+        "trainName": trainName,
+        "source": train.get("route", [None])[0],
+        "Destination": train.get("route", [None])[-1],
+        "coaches":coachData
+    }
+
 @routerTrains.post("/addTrain")
 async def add_train(train: Train):
     existing = trainCollection.find_one({"trainId": train.trainId})
