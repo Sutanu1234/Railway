@@ -1,7 +1,7 @@
 from django.shortcuts import render
 from rest_framework.views import APIView
 from rest_framework.response import Response
-from rest_framework.permissions import IsAuthenticated, AllowAny
+from rest_framework.permissions import IsAuthenticated, AllowAny,IsAdminUser
 from rest_framework import status
 from .models import Ticket, Reservation, Train, Coach, Seat
 from .serializers import TicketSerializer, ReservationSerializer, TrainSerializer, CoachSerializer, SeatSerializer
@@ -51,10 +51,11 @@ class TrainUpdateView(APIView):
 
     def post(self, request):
         train_data = {
-            'train_id': request.data.get('train_id'),
+            'train': request.data.get('train'),
             'train_name': request.data.get('train_name'),
             'train_type': request.data.get('train_type'),
         }
+        
         train_serializer = TrainSerializer(data=train_data)
         if train_serializer.is_valid():
             train_serializer.save()
@@ -77,25 +78,26 @@ class CoachUpdateView(APIView):
         return Response(serializer.data)
 
     def post(self, request):
-        coach_data = {
-            'coach_id': request.data.get('coach_id'),
-            'train_id': request.data.get('train_id'),
-            'coach_type': request.data.get('coach_type'),
-        }
-        coach_serializer = CoachSerializer(data=coach_data)
-        if coach_serializer.is_valid():
-            coach_serializer.save()
-            return Response({
-                'message': 'Coach created successfully',
-                'coach': coach_serializer.data,
-            }, status=status.HTTP_201_CREATED)
-        return Response(coach_serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        train_id = request.data.get('train')
+        try:
+            train = Train.objects.get(train_id=train_id)
+        except Train.DoesNotExist:
+            return Response({'error': 'Train with this ID does not exist'}, status=400)
+
+        data = request.data.copy()
+        data['train'] = train_id  # ensure it's the correct type
+
+        serializer = CoachSerializer(data=data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
 class SeatUpdateView(APIView):
     def get_permissions(self):
         if self.request.method == 'POST':
-            return [IsAuthenticated(), IsStaff()]
+            return [IsAuthenticated(), IsAdminUser()]
         return [AllowAny()]
 
     def get(self, request):
@@ -104,12 +106,21 @@ class SeatUpdateView(APIView):
         return Response(serializer.data)
 
     def post(self, request):
+        coach_id = request.data.get('coach_id')
+
+        # Validate if coach exists
+        try:
+            Coach.objects.get(pk=coach_id)
+        except Coach.DoesNotExist:
+            return Response({'error': 'Coach with this ID does not exist'}, status=400)
+
         seat_data = {
             'seat_id': request.data.get('seat_id'),
-            'coach_id': request.data.get('coach_id'),
+            'coach': coach_id,  # FK should match serializer field name
             'seat_type': request.data.get('seat_type'),
             'seat_number': request.data.get('seat_number'),
         }
+
         seat_serializer = SeatSerializer(data=seat_data)
         if seat_serializer.is_valid():
             seat_serializer.save()
@@ -123,7 +134,7 @@ class SeatUpdateView(APIView):
 class TrainDetailView(APIView):
     def get_permissions(self):
         if self.request.method in ['PUT', 'DELETE']:
-            return [IsAuthenticated(), IsStaff()]
+            return [IsAuthenticated(), IsAdminUser()]
         return [AllowAny()]
 
     def get_object(self, pk):
@@ -203,7 +214,7 @@ class CoachDetailView(APIView):
 class SeatDetailView(APIView):
     def get_permissions(self):
         if self.request.method in ['PUT', 'DELETE']:
-            return [IsAuthenticated(), IsStaff()]
+            return [IsAuthenticated(), IsAdminUser()]
         return [AllowAny()]
 
     def get_object(self, pk):
