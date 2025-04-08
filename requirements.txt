@@ -1,0 +1,20 @@
+# === Django Requirements ===
+Django>=4.2
+httpx>=0.27.0                    # To call FastAPI from Django
+python-decouple>=3.8             # For managing env vars
+psycopg2-binary>=2.9.9           # PostgreSQL driver (optional, skip if using SQLite)
+
+# === FastAPI + MongoDB Requirements ===
+fastapi>=0.110.0
+uvicorn[standard]>=0.27.0
+pymongo>=4.6.3
+dnspython>=2.4.2                 # Required by pymongo for MongoDB+SRV URIs
+
+# === Pydantic for FastAPI models ===
+pydantic>=2.6.4
+
+# === CORS (Optional if FastAPI is accessed via browser/Django frontend) ===
+fastapi[all]
+
+# === Optional Dev Tools ===
+python-dotenv>=1.0.1             # Shared env file support
