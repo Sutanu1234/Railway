@@ -56,3 +56,21 @@ class JobScheduleSerializer(serializers.ModelSerializer):
         if JobSchedule.objects.filter(train_id=data['train_id'], date=data['date'], employee=data['employee']).exists():
             raise serializers.ValidationError('Job Schedule already exists for this employee on the selected train and date')
         return data
+
+class EmployeeDetailSerializer(serializers.ModelSerializer):
+    email = serializers.SerializerMethodField()
+    phone = serializers.SerializerMethodField()
+    job_title = serializers.SerializerMethodField()
+
+    class Meta:
+        model = Employee
+        fields = ['Employee_id', 'name', 'email', 'phone', 'job_title']
+
+    def get_email(self, obj):
+        return getattr(obj.user, 'email', 'N/A')
+
+    def get_phone(self, obj):
+        return getattr(obj.user, 'phone', 'N/A')  # assumes a phone field exists on User model
+
+    def get_job_title(self, obj):
+        return getattr(obj.job_role_id, 'job_role_name', 'N/A')

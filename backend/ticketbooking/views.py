@@ -15,45 +15,35 @@ from django.conf import settings
 class TicketbookingView(APIView):
     def post(self, request):
         data = request.data.copy()
-        data['booked_by'] = request.user.id  # Automatically assign the current user
+        data['booked_by'] = request.user.id  # Add user ID to the data
 
-        train_id = data.get('train')
-        coach_id = data.get('coach')
-        seat_number = data.get('seat_number')
+        tickets = data.get('tickets', [])
+        errors = []
 
-        # Step 1: Call FastAPI for live seat data
-        try:
-            fastapi_response = requests.get(
-                f"{settings.FASTAPI_URL}/train/{train_id}/info"
-            )
-            if fastapi_response.status_code != 200:
-                return Response({"error": "Could not fetch train data from FastAPI"}, status=500)
-            
-            train_info = fastapi_response.json()
+        # Check each ticket for duplicate seat bookings
+        for ticket in tickets:
+            seat_id = ticket.get('seat')
+            train_id = ticket.get('train')
+            coach_id = ticket.get('coach')
+            date = ticket.get('date')
 
-            # Step 2: Validate seat availability
-            found_seat = None
-            for coach in train_info.get("coaches", []):
-                if coach["coach_id"] == coach_id:
-                    for seat in coach.get("seats", []):
-                        if str(seat["seat_number"]) == str(seat_number):
-                            if seat["is_booked"]:
-                                return Response({"error": "Seat is already booked"}, status=400)
-                            found_seat = seat
-                            break
-            if not found_seat:
-                return Response({"error": "Seat not found in the given coach"}, status=400)
+            if Ticket.objects.filter(
+                seat_id=seat_id,
+                train_id=train_id,
+                coach_id=coach_id,
+                date=date
+            ).exists():
+                errors.append(f"Seat {seat_id} already booked on train {train_id}, coach {coach_id} for {date}")
 
-        except requests.RequestException as e:
-            return Response({"error": "Error contacting FastAPI: " + str(e)}, status=500)
+        if errors:
+            return Response({"errors": errors}, status=status.HTTP_400_BAD_REQUEST)
 
-        # Step 3: Proceed with reservation
         serializer = ReservationSerializer(data=data)
         if serializer.is_valid():
             reservation = serializer.save()
             return Response(ReservationSerializer(reservation).data, status=status.HTTP_201_CREATED)
-
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
 
 
 class TrainUpdateView(APIView):

@@ -18,7 +18,6 @@ class Seat(models.Model):
     seat_id = models.CharField(max_length=50, primary_key=True)
     coach = models.ForeignKey(Coach, on_delete=models.CASCADE)
     seat_type = models.CharField(max_length=50)
-    seat_number = models.CharField(max_length=10)
 
 class Passenger(models.Model):
     name = models.CharField(max_length=100)
@@ -72,5 +71,3 @@ class Review(models.Model):
 
 
 
-# class email_staff(models.Model):
-#     unique_email = 

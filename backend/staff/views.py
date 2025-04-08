@@ -3,7 +3,7 @@ from ticketbooking.permissions import IsStaff
 from rest_framework.permissions import IsAuthenticated, IsAdminUser
 from rest_framework.response import Response
 from rest_framework.views import APIView
-from .serializers import EmployeeSerializer, JobRoleSerializer, JobScheduleSerializer, IssueSerializer
+from .serializers import EmployeeSerializer, JobRoleSerializer, JobScheduleSerializer, IssueSerializer, EmployeeDetailSerializer
 from .models import Employee, JobRole, JobSchedule, Issue
 from django.http import Http404
 
@@ -108,3 +108,12 @@ class IssueCreate(APIView):
             serializer.save()
             return Response(serializer.data, status=201)
         return Response(serializer.errors, status=400)
+
+
+class AllEmployeeDetailView(APIView):
+    permission_classes = [IsAuthenticated, IsAdminUser]
+
+    def get(self, request):
+        employees = Employee.objects.all()
+        serializer = EmployeeDetailSerializer(employees, many=True)
+        return Response(serializer.data)
