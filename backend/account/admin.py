@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import Passenger
+from .models import Passenger,StaffEmail
 
 class PassengerAdmin(admin.ModelAdmin):
     list_display = ("passenger_id", "name", "email", "phone_number", "city", "state")
@@ -8,3 +8,5 @@ class PassengerAdmin(admin.ModelAdmin):
     list_filter = ("city", "state")
 
 admin.site.register(Passenger, PassengerAdmin)
+
+admin.site.register(StaffEmail)

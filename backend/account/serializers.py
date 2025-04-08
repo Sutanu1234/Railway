@@ -1,7 +1,7 @@
 from django.contrib.auth import authenticate
 from rest_framework import serializers
 from rest_framework_simplejwt.tokens import RefreshToken
-from .models import Passenger
+from .models import Passenger,StaffEmail
 
 class LoginSerializer(serializers.Serializer):
     email = serializers.EmailField()
@@ -88,3 +88,8 @@ class StaffRegisterSerializer(serializers.Serializer):
         user.is_staff = True  # Ensure staff users are marked correctly
         user.save()
         return user
+
+class StaffEmailSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = StaffEmail
+        fields = ['id', 'staff_email']

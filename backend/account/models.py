@@ -1,6 +1,6 @@
 from django.db import models
 from django.contrib.auth.models import AbstractBaseUser, BaseUserManager, PermissionsMixin
-
+import uuid
 
 class PassengerManager(BaseUserManager):
     def create_user(self, email, name, date_of_birth, gender, phone_number, street, city, state, zip_code, password=None):
@@ -82,6 +82,6 @@ class Passenger(AbstractBaseUser, PermissionsMixin):
         return self.passenger_id
 
 
-# class staff_email(models.Model):
-    
-#     staff_email = models.EmailField(max_length=255, unique=True)
+class StaffEmail(models.Model):
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    staff_email = models.EmailField(max_length=255, unique=True)
