@@ -9,6 +9,7 @@ class EmployeeSerializer(serializers.ModelSerializer):
         model = Employee
         fields = ['Employee_id', 'job_role_id', 'user', 'name']
         read_only_fields = ['Employee_id', 'user', 'name']
+        
 
 
 

@@ -49,7 +49,7 @@ class TicketbookingView(APIView):
 class TrainUpdateView(APIView):
     def get_permissions(self):
         if self.request.method == 'POST':
-            return [IsAuthenticated(), IsStaff()]
+            return [IsAuthenticated(), IsAdminUser()]
         return [AllowAny()]
 
     def get(self, request):
@@ -58,11 +58,7 @@ class TrainUpdateView(APIView):
         return Response(serializer.data)
 
     def post(self, request):
-        train_data = {
-            'train': request.data.get('train'),
-            'train_name': request.data.get('train_name'),
-            'train_type': request.data.get('train_type'),
-        }
+        train_data =request.data.copy()
         
         train_serializer = TrainSerializer(data=train_data)
         if train_serializer.is_valid():

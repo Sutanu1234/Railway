@@ -32,7 +32,7 @@ class JobSchedule(models.Model):
     train_id = models.ForeignKey(Train, on_delete=models.CASCADE)
     date = models.DateField()
     employee = models.ForeignKey(Employee, on_delete=models.CASCADE)
-    issue = models.ForeignKey(Issue, on_delete=models.CASCADE)
+    # issue = models.ForeignKey(Issue, on_delete=models.CASCADE)
     class Meta:
         constraints = [
             models.UniqueConstraint(fields=['train_id', 'date', 'employee'], name='unique_record'),
